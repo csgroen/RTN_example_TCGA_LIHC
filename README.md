@@ -196,7 +196,7 @@ We'll use the same 807 transcription factors (TFs) used by M. A. A. Castro et al
 load("data/transcriptionFactors.RData")
 tfSymbols <- tfs$SYMBOL
 
-#-- Conform regulatory elements annotation Add ENSEMBL information to regulatory element annotations
+#-- Add ENSEMBL information to regulatory element annotations
 tfEnsembls <- rowData(tcgaLIHCdata) %>%
     as.data.frame() %>%
     filter(SYMBOL %in% tfSymbols) %>%

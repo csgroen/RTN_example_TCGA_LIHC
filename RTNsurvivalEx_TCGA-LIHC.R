@@ -114,9 +114,23 @@ save(tcgaLIHCdata, file = "results/tcgaLIHCdata_preprocessed.RData")
 load("data/transcriptionFactors.RData")
 tfSymbols <- tfs$SYMBOL
 
-#-- Conform regulatory elements annotation 
+#-- Add ENSEMBL information to regulatory element annotations
 tfEnsembls <- rowData(tcgaLIHCdata) %>%
     as.data.frame() %>%
     filter(SYMBOL %in% tfSymbols) %>%
     pull(ENSEMBL)
 save(tfEnsembls, file = "results/tfEnsembls.RData")
+
+#-------------------------------------------------------------------------------
+#-- OPTIONAL - for parallel processing
+library(parallel)
+n <- detectCores() - 1
+options(cluster=makeCluster(n, "SOCK"))
+
+#-- RTN pipeline
+lihcTNI <- tni.constructor(tcgaLIHCdata, regulatoryElements = tfEnsembls)
+lihcTNI <- tni.permutation(lihcTNI, pValueCutoff = 10^-5, estimator = "spearman")
+lihcTNI <- tni.bootstrap(lihcTNI, nBootstraps = 200)
+lihcTNI <- tni.dpi.filter(lihcTNI)
+#-- OPTIONAL - for parallel processing
+stopCluster(getOption("cluster"))
