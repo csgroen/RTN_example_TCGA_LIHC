@@ -193,9 +193,9 @@ $(document).ready(function () {
 <li><a href="#summary"><span class="toc-section-number">1</span> Summary</a></li>
 <li><a href="#libraries"><span class="toc-section-number">2</span> Libraries</a></li>
 <li><a href="#use-tcgabiolinks-to-download-harmonized-data-from-the-gdc"><span class="toc-section-number">3</span> Use TCGAbiolinks to download harmonized data from the GDC</a></li>
-<li><a href="#download-survival-data-from-the-tcga-pan-cancer-clinical-data-paper-liu-et.-al-2018"><span class="toc-section-number">4</span> Download survival data from the TCGA Pan-Cancer Clinical Data paper (Liu et. al, 2018)</a></li>
+<li><a href="#download-survival-data-from-the-tcga-pan-cancer-clinical-data-paper"><span class="toc-section-number">4</span> Download survival data from the TCGA Pan-Cancer Clinical Data paper</a></li>
 <li><a href="#download-molecular-data-from-the-tcga-lihc-cohort-publication"><span class="toc-section-number">5</span> Download molecular data from the TCGA-LIHC cohort publication</a></li>
-<li><a href="#join-molecular-and-clinical-features-to-rangedsummarizedexperiment-object"><span class="toc-section-number">6</span> Join molecular and clinical features to RangedSummarizedExperiment object</a></li>
+<li><a href="#join-clinical-and-molecular-features-to-rangedsummarizedexperiment-object"><span class="toc-section-number">6</span> Join clinical and molecular features to RangedSummarizedExperiment object</a></li>
 <li><a href="#pre-process-list-of-regulatory-elements-transcription-factors"><span class="toc-section-number">7</span> Pre-process list of regulatory elements (transcription factors)</a><ul>
 <li><a href="#inference-of-the-regulatory-network-with-rtn"><span class="toc-section-number">7.1</span> Inference of the regulatory network with RTN</a></li>
 </ul></li>
@@ -208,7 +208,7 @@ $(document).ready(function () {
 <h1><span class="header-section-number">1</span> Summary</h1>
 <p>This example uses the RTN package to compute a transcriptional regulatory network for hepatocellular carcinoma using the publicly available mRNA-seq data for the TCGA-LIHC cohort.</p>
 <p>We will show how to download the relevant harmonized GRCh38/hg38 data from the Genomic Data Commons (GDC) using the TCGAbiolinks package <span class="citation">(Colaprico et al. 2016)</span>. We will also update the GDC information using molecular features from the TCGA LIHC analysis publication <span class="citation">The Cancer Genome Atlas Research Network (2017)</span> and outcomes from the Pan-Cancer Atlas clinical data publication <span class="citation">J. Liu et al. (2018)</span>.</p>
-<p>After joining data from these sources, we will compute the mutual information-based transcriptional regulatory network ,using the RTN implementation of the ARACNE algorithm <span class="citation">(Margolin et al. 2006)</span>. We will then assess the regulons for a list of 807 transcription factors <span class="citation">(Carro et al. 2010)</span> as regulators.</p>
+<p>After joining data from these sources, we will compute the mutual information-based transcriptional regulatory network, using the RTN implementation of the ARACNE algorithm <span class="citation">(Margolin et al. 2006)</span>. We will then assess the regulons for a list of 807 transcription factors <span class="citation">(Carro et al. 2010)</span> as regulators.</p>
 <p>Finally, we will identify regulons whose activity is informative of 5-year Overall Survival, using the RTNsurvival package.</p>
 </div>
 <div id="libraries" class="section level1">
@@ -231,7 +231,7 @@ if (!dir.exists(&quot;data&quot;) || !file.exists(&quot;data/transcriptionFactor
 </div>
 <div id="use-tcgabiolinks-to-download-harmonized-data-from-the-gdc" class="section level1">
 <h1><span class="header-section-number">3</span> Use TCGAbiolinks to download harmonized data from the GDC</h1>
-<p>We’ll use the Bioconductor package <code>TCGAbiolinks</code> to query and download from the GDC. We are looking for the harmonized, pre-processed RNA-seq for the TCGA-LIHC cohort. <code>TCGAbiolinks</code> will create a directory called GDCdata in your working directory and save the files downloaded from the GDC. The files for each patient will be downloaded in a separate file. For LIHC, there are 424 files (~200 MB total), so the download can take a while. The expression profile for each patient will be downloaded into a separate folder and file. Then, the GDCprepare function will compile them into an R object of class <code>RangedSummarizedExperiment</code>.</p>
+<p>We’ll use the Bioconductor package <code>TCGAbiolinks</code> to query and download from the GDC. We are looking for the harmonized, pre-processed RNA-seq for the TCGA-LIHC cohort. <code>TCGAbiolinks</code> will create a directory called GDCdata in your working directory and save the files downloaded from the GDC. The files for each patient will be downloaded as a separate file. For LIHC, there are 424 files (~200 MB total), so the download can take a while. The expression profile for each patient will be downloaded into a separate folder and file. Then, the GDCprepare function will compile them into an R object of class <code>RangedSummarizedExperiment</code>.</p>
 <p>The <code>RangedSummarizedExperiment</code> has 6 slots. The most important slots are <code>rowRanges</code> (gene metadata), <code>colData</code> (patient metadata), and <code>assays</code> (gene expression matrix).</p>
 <pre class="r"><code>#-- Download the TCGA-LIHC data
 query &lt;- GDCquery(&quot;TCGA-LIHC&quot;, 
@@ -256,9 +256,9 @@ colnames(rowData(tcgaLIHCdata)) &lt;- c(&quot;ENSEMBL&quot;, &quot;SYMBOL&quot;,
 colAnnotation &lt;- colData(tcgaLIHCdata)</code></pre>
 <p>The <code>tcgaLIHCdata</code> object is now ready for the RTN pipeline. But, since we want to assess survival and molecular features, we will bring in other annotation sources on the TCGA cohort to complement the patient metadata available in the GDC.</p>
 </div>
-<div id="download-survival-data-from-the-tcga-pan-cancer-clinical-data-paper-liu-et.-al-2018" class="section level1">
-<h1><span class="header-section-number">4</span> Download survival data from the TCGA Pan-Cancer Clinical Data paper (Liu et. al, 2018)</h1>
-<p>While survival data is available from the GDC, we suggest using the data from the Pan-Cancer clinical data publication <span class="citation">(J. Liu et al. 2018)</span>. Table 3 in that publication indicates that, for the LIHC cohort (n=377), OS, PFI, and DFI data are directly usable, but cautions that DSS needs a longer follow-up. Here, we will use the OS data.</p>
+<div id="download-survival-data-from-the-tcga-pan-cancer-clinical-data-paper" class="section level1">
+<h1><span class="header-section-number">4</span> Download survival data from the TCGA Pan-Cancer Clinical Data paper</h1>
+<p>While survival data is available from the GDC, we suggest using outcomes from the Pan-Cancer clinical data publication <span class="citation">(J. Liu et al. 2018)</span>. Table 3 in that publication indicates that, for the LIHC cohort (n=377), OS, PFI, and DFI data are directly usable, but cautions that DSS needs a longer follow-up. Here, we will use the OS data.</p>
 <p>We can download the data directly from the supplements of the publication. We’ll use the <code>readxl</code> package to read the data, and <code>tidyverse</code> functions for filtering the data, remapping and renaming features and deriving new features from the provided features.</p>
 <pre class="r"><code>#-- Get Pan-Cancer survival data (Liu et. al. 2018)
 download.file(&quot;https://ars.els-cdn.com/content/image/1-s2.0-S0092867418302290-mmc1.xlsx&quot;,
@@ -319,8 +319,8 @@ lihc_molcData &lt;- cbind(lihc_molcData, dummy_mRNA)
 lihc_survData &lt;- left_join(lihc_survData, lihc_molcData, 
                            by = c(&quot;bcr_patient_barcode&quot; = &quot;barcode&quot;))</code></pre>
 </div>
-<div id="join-molecular-and-clinical-features-to-rangedsummarizedexperiment-object" class="section level1">
-<h1><span class="header-section-number">6</span> Join molecular and clinical features to RangedSummarizedExperiment object</h1>
+<div id="join-clinical-and-molecular-features-to-rangedsummarizedexperiment-object" class="section level1">
+<h1><span class="header-section-number">6</span> Join clinical and molecular features to RangedSummarizedExperiment object</h1>
 <p>Finally, we’ll join the features we derived from the two Cell publications to the data we got from the GDC through TCGAbiolinks.</p>
 <pre class="r"><code>#-- Conform names
 idx &lt;- match(lihc_survData$bcr_patient_barcode, colAnnotation$patient)

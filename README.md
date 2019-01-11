@@ -1,6 +1,6 @@
 Example of data preprocessing for RTNsurvival, using the TCGA-LIHC cohort
 ================
-Clarice Groeneveld, Gordon Robertson, Mauro Castro <br>
+Clarice Groeneveld, Gordon Robertson, Mauro Castro
 10 January 2019
 
 Summary
@@ -10,7 +10,7 @@ This example uses the RTN package to compute a transcriptional regulatory networ
 
 We will show how to download the relevant harmonized GRCh38/hg38 data from the Genomic Data Commons (GDC) using the TCGAbiolinks package (Colaprico et al. 2016). We will also update the GDC information using molecular features from the TCGA LIHC analysis publication The Cancer Genome Atlas Research Network (2017) and outcomes from the Pan-Cancer Atlas clinical data publication J. Liu et al. (2018).
 
-After joining data from these sources, we will compute the mutual information-based transcriptional regulatory network ,using the RTN implementation of the ARACNE algorithm (Margolin et al. 2006). We will then assess the regulons for a list of 807 transcription factors (Carro et al. 2010) as regulators.
+After joining data from these sources, we will compute the mutual information-based transcriptional regulatory network, using the RTN implementation of the ARACNE algorithm (Margolin et al. 2006). We will then assess the regulons for a list of 807 transcription factors (Carro et al. 2010) as regulators.
 
 Finally, we will identify regulons whose activity is informative of 5-year Overall Survival, using the RTNsurvival package.
 
@@ -42,7 +42,7 @@ if (!dir.exists("data") || !file.exists("data/transcriptionFactors.RData")) {
 Use TCGAbiolinks to download harmonized data from the GDC
 =========================================================
 
-We'll use the Bioconductor package `TCGAbiolinks` to query and download from the GDC. We are looking for the harmonized, pre-processed RNA-seq for the TCGA-LIHC cohort. `TCGAbiolinks` will create a directory called GDCdata in your working directory and save the files downloaded from the GDC. The files for each patient will be downloaded in a separate file. For LIHC, there are 424 files (~200 MB total), so the download can take a while. The expression profile for each patient will be downloaded into a separate folder and file. Then, the GDCprepare function will compile them into an R object of class `RangedSummarizedExperiment`.
+We'll use the Bioconductor package `TCGAbiolinks` to query and download from the GDC. We are looking for the harmonized, pre-processed RNA-seq for the TCGA-LIHC cohort. `TCGAbiolinks` will create a directory called GDCdata in your working directory and save the files downloaded from the GDC. The files for each patient will be downloaded as a separate file. For LIHC, there are 424 files (~200 MB total), so the download can take a while. The expression profile for each patient will be downloaded into a separate folder and file. Then, the GDCprepare function will compile them into an R object of class `RangedSummarizedExperiment`.
 
 The `RangedSummarizedExperiment` has 6 slots. The most important slots are `rowRanges` (gene metadata), `colData` (patient metadata), and `assays` (gene expression matrix).
 
@@ -84,10 +84,10 @@ colAnnotation <- colData(tcgaLIHCdata)
 
 The `tcgaLIHCdata` object is now ready for the RTN pipeline. But, since we want to assess survival and molecular features, we will bring in other annotation sources on the TCGA cohort to complement the patient metadata available in the GDC.
 
-Download survival data from the TCGA Pan-Cancer Clinical Data paper (Liu et. al, 2018)
-======================================================================================
+Download survival data from the TCGA Pan-Cancer Clinical Data paper
+===================================================================
 
-While survival data is available from the GDC, we suggest using the data from the Pan-Cancer clinical data publication (J. Liu et al. 2018). Table 3 in that publication indicates that, for the LIHC cohort (n=377), OS, PFI, and DFI data are directly usable, but cautions that DSS needs a longer follow-up. Here, we will use the OS data.
+While survival data is available from the GDC, we suggest using outcomes from the Pan-Cancer clinical data publication (J. Liu et al. 2018). Table 3 in that publication indicates that, for the LIHC cohort (n=377), OS, PFI, and DFI data are directly usable, but cautions that DSS needs a longer follow-up. Here, we will use the OS data.
 
 We can download the data directly from the supplements of the publication. We'll use the `readxl` package to read the data, and `tidyverse` functions for filtering the data, remapping and renaming features and deriving new features from the provided features.
 
@@ -164,7 +164,7 @@ lihc_survData <- left_join(lihc_survData, lihc_molcData,
                            by = c("bcr_patient_barcode" = "barcode"))
 ```
 
-Join molecular and clinical features to RangedSummarizedExperiment object
+Join clinical and molecular features to RangedSummarizedExperiment object
 =========================================================================
 
 Finally, we'll join the features we derived from the two Cell publications to the data we got from the GDC through TCGAbiolinks.
@@ -237,7 +237,7 @@ The `tni.bootstrap` takes the reference network and performs bootstrap analysis 
 lihcTNI <- tni.bootstrap(lihcTNI, nBootstraps = 200)
 ```
 
-The `tni.dpi.filter` performs the Data Processing Inequality filter on the reference network. This filter looks at relationships where two regulators have significant mutual information with each other and also with a common target. Those triplets are broken at the weakest link (i.e. the edge with the lowest MI), to minimize the number of indirect interactions present in the network. This filtered network is called the **DPI network** (or DPI-filtered network). Please refer to Margolin et al. (2006), Fletcher et al. (2013), Castro et al. (2016) and Robertson et al. (2017) for additional details.
+The `tni.dpi.filter` performs the Data Processing Inequality filter on the reference network. This filter looks at relationships where two regulators have significant mutual information with each other and also with a common target. Those triplets are broken at the weakest link (i.e. the edge with the lowest MI), to minimize the number of indirect interactions present in the network. This filtered network is called the **DPI network** (or DPI-filtered network). Please refer to Margolin et al. (2006), Fletcher et al. (2013), M. A. A. Castro et al. (2016) and A. G. Robertson et al. (2017) for additional details.
 
 ``` r
 #-- Data Processing Inequality filter
