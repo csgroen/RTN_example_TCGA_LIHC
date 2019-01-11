@@ -1,6 +1,6 @@
 Example of data preprocessing for RTNsurvival, using the TCGA-LIHC cohort
 ================
-Clarice Groeneveld, Gordon Robertson, Mauro Castro
+Clarice Groeneveld, Gordon Robertson, Mauro Castro<br>
 10 January 2019
 
 Summary
