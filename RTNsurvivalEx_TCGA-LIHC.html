@@ -208,7 +208,7 @@ $(document).ready(function () {
 <h1><span class="header-section-number">1</span> Summary</h1>
 <p>This example uses the RTN package to compute a transcriptional regulatory network for hepatocellular carcinoma using the publicly available mRNA-seq data for the TCGA-LIHC cohort.</p>
 <p>We will show how to download the relevant harmonized GRCh38/hg38 data from the Genomic Data Commons (GDC) using the TCGAbiolinks package <span class="citation">(Colaprico et al. 2016)</span>. We will also update the GDC information using molecular features from the TCGA LIHC analysis publication <span class="citation">The Cancer Genome Atlas Research Network (2017)</span> and outcomes from the Pan-Cancer Atlas clinical data publication <span class="citation">J. Liu et al. (2018)</span>.</p>
-<p>After joining data from these sources, we will compute the transcriptional regulatory network using the RTN implementation of mutual-information and the ARACNE algorithm <span class="citation">(Margolin et al. 2006)</span>, then will assess the regulons for a list of 807 transcription factors <span class="citation">(Carro et al. 2010)</span> as regulators.</p>
+<p>After joining data from these sources, we will compute the mutual information-based transcriptional regulatory network ,using the RTN implementation of the ARACNE algorithm <span class="citation">(Margolin et al. 2006)</span>. We will then assess the regulons for a list of 807 transcription factors <span class="citation">(Carro et al. 2010)</span> as regulators.</p>
 <p>Finally, we will identify regulons whose activity is informative of 5-year Overall Survival, using the RTNsurvival package.</p>
 </div>
 <div id="libraries" class="section level1">
@@ -231,7 +231,7 @@ if (!dir.exists(&quot;data&quot;) || !file.exists(&quot;data/transcriptionFactor
 </div>
 <div id="use-tcgabiolinks-to-download-harmonized-data-from-the-gdc" class="section level1">
 <h1><span class="header-section-number">3</span> Use TCGAbiolinks to download harmonized data from the GDC</h1>
-<p>We’ll use the Bioconductor package <code>TCGAbiolinks</code> to query and download from GDC. We are looking for the harmonized, pre-processed RNA-seq for the TCGA-LIHC cohort. <code>TCGAbiolinks</code> will create a directory called GDCdata in your working directory and save the files downloaded from GDC. The files for each patient will be downloaded in a separate file. For LIHC, there are 424 files (~200 MB total), so the download can take a while. The expression profile for each patient will be downloaded into a separate folder and file. Then, the GDCprepare function will compile them into an R object of class <code>RangedSummarizedExperiment</code>.</p>
+<p>We’ll use the Bioconductor package <code>TCGAbiolinks</code> to query and download from the GDC. We are looking for the harmonized, pre-processed RNA-seq for the TCGA-LIHC cohort. <code>TCGAbiolinks</code> will create a directory called GDCdata in your working directory and save the files downloaded from the GDC. The files for each patient will be downloaded in a separate file. For LIHC, there are 424 files (~200 MB total), so the download can take a while. The expression profile for each patient will be downloaded into a separate folder and file. Then, the GDCprepare function will compile them into an R object of class <code>RangedSummarizedExperiment</code>.</p>
 <p>The <code>RangedSummarizedExperiment</code> has 6 slots. The most important slots are <code>rowRanges</code> (gene metadata), <code>colData</code> (patient metadata), and <code>assays</code> (gene expression matrix).</p>
 <pre class="r"><code>#-- Download the TCGA-LIHC data
 query &lt;- GDCquery(&quot;TCGA-LIHC&quot;, 
@@ -321,7 +321,7 @@ lihc_survData &lt;- left_join(lihc_survData, lihc_molcData,
 </div>
 <div id="join-molecular-and-clinical-features-to-rangedsummarizedexperiment-object" class="section level1">
 <h1><span class="header-section-number">6</span> Join molecular and clinical features to RangedSummarizedExperiment object</h1>
-<p>Finally, we’ll join the features we derived from the two Cell publications to the data we got from GDC through TCGAbiolinks.</p>
+<p>Finally, we’ll join the features we derived from the two Cell publications to the data we got from the GDC through TCGAbiolinks.</p>
 <pre class="r"><code>#-- Conform names
 idx &lt;- match(lihc_survData$bcr_patient_barcode, colAnnotation$patient)
 rownames(lihc_survData) &lt;- rownames(colAnnotation)[idx]
@@ -335,7 +335,7 @@ dir.create(&quot;results&quot;)</code></pre>
 </div>
 <div id="pre-process-list-of-regulatory-elements-transcription-factors" class="section level1">
 <h1><span class="header-section-number">7</span> Pre-process list of regulatory elements (transcription factors)</h1>
-<p>We’ll use the same 807 transcription factors (TFs) used by <span class="citation">M. A. A. Castro et al. (2016)</span> with a breast cancer transcriptional network reconstruction. Since the TCGA annotations do not use Ensembl Gene IDs, we’ll match the TFs by HGNC symbol and then find the Ensembl Gene IDs.</p>
+<p>We’ll woth with the same 807 transcription factors (TFs) used by <span class="citation">M. A. A. Castro et al. (2016)</span> with a breast cancer transcriptional network reconstruction. Since the TCGA annotations do not use Ensembl Gene IDs, we’ll match the TFs by HGNC symbol and then find the Ensembl Gene IDs.</p>
 <pre class="r"><code>#-- Get list of regulatory elements
 load(&quot;data/transcriptionFactors.RData&quot;)
 tfSymbols &lt;- tfs$SYMBOL
@@ -348,7 +348,7 @@ tfEnsembls &lt;- rowData(tcgaLIHCdata) %&gt;%
 save(tfEnsembls, file = &quot;results/tfEnsembls.RData&quot;)</code></pre>
 <div id="inference-of-the-regulatory-network-with-rtn" class="section level2">
 <h2><span class="header-section-number">7.1</span> Inference of the regulatory network with RTN</h2>
-<p>The <em>RTN</em> pipeline can be run in single- or multi-threaded modes. To run in multithreaded, we simply detect available cores and define the cluster before initiating the pipeline functions.</p>
+<p>The <em>RTN</em> pipeline can be run in single- or multi-threaded modes. To run in multithreaded, we simply load the <code>parallel</code> library, detect available cores and define the cluster before initiating the pipeline functions.</p>
 <pre class="r"><code>#-- OPTIONAL - for parallel processing
 library(parallel)
 n &lt;- detectCores() - 1
@@ -362,10 +362,10 @@ lihcTNI &lt;- tni.permutation(lihcTNI, pValueCutoff = 10^-5, estimator = &quot;s
 <p>The <code>tni.bootstrap</code> takes the reference network and performs bootstrap analysis to assess the stability of the inferred regulator-target pairs. In this example, we perform 200 bootstraps and keep the pairs that are observed in at least 95% of the iterations (i.e. a 95% consensus).</p>
 <pre class="r"><code>#-- Bootstrap analysis
 lihcTNI &lt;- tni.bootstrap(lihcTNI, nBootstraps = 200)</code></pre>
-<p>he <code>tni.dpi.filter</code> performs the Data Processing Inequality filter on the reference network. This filter looks at relationships where two regulators have significant mutual information with each other and also with a common target. Those triplets are broken at the weakest link (i.e. the edge with the lowest MI), to minimize the number of indirect interactions present in the network. This filtered network is called the <strong>DPI network</strong> (or DPI-filtered network). Please refer to <span class="citation">Margolin et al. (2006)</span>, <span class="citation">Fletcher et al. (2013)</span>, <span class="citation">M. A. A. Castro et al. (2016)</span> and <span class="citation">A. G. Robertson et al. (2017)</span> for additional details.</p>
+<p>The <code>tni.dpi.filter</code> performs the Data Processing Inequality filter on the reference network. This filter looks at relationships where two regulators have significant mutual information with each other and also with a common target. Those triplets are broken at the weakest link (i.e. the edge with the lowest MI), to minimize the number of indirect interactions present in the network. This filtered network is called the <strong>DPI network</strong> (or DPI-filtered network). Please refer to <span class="citation">Margolin et al. (2006)</span>, <span class="citation">Fletcher et al. (2013)</span>, <span class="citation">M. A. A. Castro et al. (2016)</span> and <span class="citation">A. G. Robertson et al. (2017)</span> for additional details.</p>
 <pre class="r"><code>#-- Data Processing Inequality filter
 lihcTNI &lt;- tni.dpi.filter(lihcTNI)</code></pre>
-<p>If run in parallel mode, you should disable the cluster now.</p>
+<p>If run in parallel mode/multithreaded, you should disable the cluster now.</p>
 <pre class="r"><code>#-- OPTIONAL - for parallel processing
 stopCluster(getOption(&quot;cluster&quot;))</code></pre>
 </div>
@@ -495,7 +495,7 @@ stopCluster(getOption(&quot;cluster&quot;))</code></pre>
 <p>Carro, Maria Stella, Wei Keat Lim, Mariano Javier Alvarez, Robert J. Bollo, Xudong Zhao, Evan Y. Snyder, Erik P. Sulman, et al. 2010. “The Transcriptional Network for Mesenchymal Transformation of Brain Tumours.” <em>Nature</em> 463 (7279). Springer Nature: 318–25. doi:<a href="https://doi.org/10.1038/nature08712">10.1038/nature08712</a>.</p>
 </div>
 <div id="ref-Castro2016">
-<p>Castro, Mauro A A, Ines de Santiago, Thomas M Campbell, Courtney Vaughn, Theresa E Hickey, Edith Ross, Wayne D Tilley, Florian Markowetz, Bruce A J Ponder, and Kerstin B Meyer. 2016. “Regulators of Genetic Risk of Breast Cancer Identified by Integrative Network Analysis.” <em>Nature Genetics</em> 48 (1). Springer Nature: 12–21. doi:<a href="https://doi.org/10.1038/ng.3458">10.1038/ng.3458</a>.</p>
+<p>Castro, M A A, Ines de Santiago, Thomas M Campbell, Courtney Vaughn, Theresa E Hickey, Edith Ross, Wayne D Tilley, Florian Markowetz, Bruce A J Ponder, and Kerstin B Meyer. 2016. “Regulators of Genetic Risk of Breast Cancer Identified by Integrative Network Analysis.” <em>Nature Genetics</em> 48 (1). Springer Nature: 12–21. doi:<a href="https://doi.org/10.1038/ng.3458">10.1038/ng.3458</a>.</p>
 </div>
 <div id="ref-Colaprico2016">
 <p>Colaprico, Antonio, Tiago C. Silva, Catharina Olsen, Luciano Garofano, Claudia Cava, Davide Garolini, Thais S. Sabedot, et al. 2016. “TCGAbiolinks: An R/Bioconductor Package for Integrative Analysis of Tcga Data.” <em>Nucleic Acids Research</em> 44 (8): e71. doi:<a href="https://doi.org/10.1093/nar/gkv1507">10.1093/nar/gkv1507</a>.</p>

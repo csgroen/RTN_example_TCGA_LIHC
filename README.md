@@ -1,6 +1,6 @@
 Example of data preprocessing for RTNsurvival, using the TCGA-LIHC cohort
 ================
-Clarice Groeneveld, Gordon Robertson, Mauro Castro <br>
+Clarice Groeneveld, Gordon Robertson, Mauro Castro
 10 January 2019
 
 Summary
@@ -10,7 +10,7 @@ This example uses the RTN package to compute a transcriptional regulatory networ
 
 We will show how to download the relevant harmonized GRCh38/hg38 data from the Genomic Data Commons (GDC) using the TCGAbiolinks package (Colaprico et al. 2016). We will also update the GDC information using molecular features from the TCGA LIHC analysis publication The Cancer Genome Atlas Research Network (2017) and outcomes from the Pan-Cancer Atlas clinical data publication J. Liu et al. (2018).
 
-After joining data from these sources, we will compute the transcriptional regulatory network using the RTN implementation of mutual-information and the ARACNE algorithm (Margolin et al. 2006), then will assess the regulons for a list of 807 transcription factors (Carro et al. 2010) as regulators.
+After joining data from these sources, we will compute the mutual information-based transcriptional regulatory network ,using the RTN implementation of the ARACNE algorithm (Margolin et al. 2006). We will then assess the regulons for a list of 807 transcription factors (Carro et al. 2010) as regulators.
 
 Finally, we will identify regulons whose activity is informative of 5-year Overall Survival, using the RTNsurvival package.
 
@@ -42,7 +42,7 @@ if (!dir.exists("data") || !file.exists("data/transcriptionFactors.RData")) {
 Use TCGAbiolinks to download harmonized data from the GDC
 =========================================================
 
-We'll use the Bioconductor package `TCGAbiolinks` to query and download from GDC. We are looking for the harmonized, pre-processed RNA-seq for the TCGA-LIHC cohort. `TCGAbiolinks` will create a directory called GDCdata in your working directory and save the files downloaded from GDC. The files for each patient will be downloaded in a separate file. For LIHC, there are 424 files (~200 MB total), so the download can take a while. The expression profile for each patient will be downloaded into a separate folder and file. Then, the GDCprepare function will compile them into an R object of class `RangedSummarizedExperiment`.
+We'll use the Bioconductor package `TCGAbiolinks` to query and download from the GDC. We are looking for the harmonized, pre-processed RNA-seq for the TCGA-LIHC cohort. `TCGAbiolinks` will create a directory called GDCdata in your working directory and save the files downloaded from the GDC. The files for each patient will be downloaded in a separate file. For LIHC, there are 424 files (~200 MB total), so the download can take a while. The expression profile for each patient will be downloaded into a separate folder and file. Then, the GDCprepare function will compile them into an R object of class `RangedSummarizedExperiment`.
 
 The `RangedSummarizedExperiment` has 6 slots. The most important slots are `rowRanges` (gene metadata), `colData` (patient metadata), and `assays` (gene expression matrix).
 
@@ -167,7 +167,7 @@ lihc_survData <- left_join(lihc_survData, lihc_molcData,
 Join molecular and clinical features to RangedSummarizedExperiment object
 =========================================================================
 
-Finally, we'll join the features we derived from the two Cell publications to the data we got from GDC through TCGAbiolinks.
+Finally, we'll join the features we derived from the two Cell publications to the data we got from the GDC through TCGAbiolinks.
 
 ``` r
 #-- Conform names
@@ -189,7 +189,7 @@ save(tcgaLIHCdata, file = "results/tcgaLIHCdata_preprocessed.RData")
 Pre-process list of regulatory elements (transcription factors)
 ===============================================================
 
-We'll use the same 807 transcription factors (TFs) used by M. A. A. Castro et al. (2016) with a breast cancer transcriptional network reconstruction. Since the TCGA annotations do not use Ensembl Gene IDs, we'll match the TFs by HGNC symbol and then find the Ensembl Gene IDs.
+We'll woth with the same 807 transcription factors (TFs) used by M. A. A. Castro et al. (2016) with a breast cancer transcriptional network reconstruction. Since the TCGA annotations do not use Ensembl Gene IDs, we'll match the TFs by HGNC symbol and then find the Ensembl Gene IDs.
 
 ``` r
 #-- Get list of regulatory elements
@@ -207,7 +207,7 @@ save(tfEnsembls, file = "results/tfEnsembls.RData")
 Inference of the regulatory network with RTN
 --------------------------------------------
 
-The *RTN* pipeline can be run in single- or multi-threaded modes. To run in multithreaded, we simply detect available cores and define the cluster before initiating the pipeline functions.
+The *RTN* pipeline can be run in single- or multi-threaded modes. To run in multithreaded, we simply load the `parallel` library, detect available cores and define the cluster before initiating the pipeline functions.
 
 ``` r
 #-- OPTIONAL - for parallel processing
@@ -237,14 +237,14 @@ The `tni.bootstrap` takes the reference network and performs bootstrap analysis 
 lihcTNI <- tni.bootstrap(lihcTNI, nBootstraps = 200)
 ```
 
-he `tni.dpi.filter` performs the Data Processing Inequality filter on the reference network. This filter looks at relationships where two regulators have significant mutual information with each other and also with a common target. Those triplets are broken at the weakest link (i.e. the edge with the lowest MI), to minimize the number of indirect interactions present in the network. This filtered network is called the **DPI network** (or DPI-filtered network). Please refer to Margolin et al. (2006), Fletcher et al. (2013), M. A. A. Castro et al. (2016) and A. G. Robertson et al. (2017) for additional details.
+The `tni.dpi.filter` performs the Data Processing Inequality filter on the reference network. This filter looks at relationships where two regulators have significant mutual information with each other and also with a common target. Those triplets are broken at the weakest link (i.e. the edge with the lowest MI), to minimize the number of indirect interactions present in the network. This filtered network is called the **DPI network** (or DPI-filtered network). Please refer to Margolin et al. (2006), Fletcher et al. (2013), M. A. A. Castro et al. (2016) and A. G. Robertson et al. (2017) for additional details.
 
 ``` r
 #-- Data Processing Inequality filter
 lihcTNI <- tni.dpi.filter(lihcTNI)
 ```
 
-If run in parallel mode, you should disable the cluster now.
+If run in parallel mode/multithreaded, you should disable the cluster now.
 
 ``` r
 #-- OPTIONAL - for parallel processing
@@ -256,7 +256,7 @@ References
 
 Carro, Maria Stella, Wei Keat Lim, Mariano Javier Alvarez, Robert J. Bollo, Xudong Zhao, Evan Y. Snyder, Erik P. Sulman, et al. 2010. “The Transcriptional Network for Mesenchymal Transformation of Brain Tumours.” *Nature* 463 (7279). Springer Nature: 318–25. doi:[10.1038/nature08712](https://doi.org/10.1038/nature08712).
 
-Castro, Mauro A A, Ines de Santiago, Thomas M Campbell, Courtney Vaughn, Theresa E Hickey, Edith Ross, Wayne D Tilley, Florian Markowetz, Bruce A J Ponder, and Kerstin B Meyer. 2016. “Regulators of Genetic Risk of Breast Cancer Identified by Integrative Network Analysis.” *Nature Genetics* 48 (1). Springer Nature: 12–21. doi:[10.1038/ng.3458](https://doi.org/10.1038/ng.3458).
+Castro, M A A, Ines de Santiago, Thomas M Campbell, Courtney Vaughn, Theresa E Hickey, Edith Ross, Wayne D Tilley, Florian Markowetz, Bruce A J Ponder, and Kerstin B Meyer. 2016. “Regulators of Genetic Risk of Breast Cancer Identified by Integrative Network Analysis.” *Nature Genetics* 48 (1). Springer Nature: 12–21. doi:[10.1038/ng.3458](https://doi.org/10.1038/ng.3458).
 
 Colaprico, Antonio, Tiago C. Silva, Catharina Olsen, Luciano Garofano, Claudia Cava, Davide Garolini, Thais S. Sabedot, et al. 2016. “TCGAbiolinks: An R/Bioconductor Package for Integrative Analysis of Tcga Data.” *Nucleic Acids Research* 44 (8): e71. doi:[10.1093/nar/gkv1507](https://doi.org/10.1093/nar/gkv1507).
 
