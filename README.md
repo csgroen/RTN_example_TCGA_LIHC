@@ -237,7 +237,7 @@ The `tni.bootstrap` takes the reference network and performs bootstrap analysis 
 lihcTNI <- tni.bootstrap(lihcTNI, nBootstraps = 200)
 ```
 
-The `tni.dpi.filter` performs the Data Processing Inequality filter on the reference network. This filter looks at relationships where two regulators have significant mutual information with each other and also with a common target. Those triplets are broken at the weakest link (i.e. the edge with the lowest MI), to minimize the number of indirect interactions present in the network. This filtered network is called the **DPI network** (or DPI-filtered network). Please refer to Margolin et al. (2006), Fletcher et al. (2013), M. A. A. Castro et al. (2016) and A. G. Robertson et al. (2017) for additional details.
+The `tni.dpi.filter` performs the Data Processing Inequality filter on the reference network. This filter looks at relationships where two regulators have significant mutual information with each other and also with a common target. Those triplets are broken at the weakest link (i.e. the edge with the lowest MI), to minimize the number of indirect interactions present in the network. This filtered network is called the **DPI network** (or DPI-filtered network). Please refer to Margolin et al. (2006), Fletcher et al. (2013), Castro et al. (2016) and Robertson et al. (2017) for additional details.
 
 ``` r
 #-- Data Processing Inequality filter
