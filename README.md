@@ -11,7 +11,7 @@ This example shows how to prepare input data for the RTN and RTNsurvival package
 Libraries
 ---------
 
-Please make sure you have all libraries installed before proceeding. Also, please set a working directory and download the relevant `data`.
+Please make sure you have all libraries installed before proceeding and set a working directory.
 
 ``` r
 library(SummarizedExperiment)
