@@ -100,8 +100,9 @@ lihc_survData <- left_join(lihc_survData, lihc_molcData,
 
 #-------------------------------------------------------------------------------
 #-- Conform names
-idx <- match(lihc_survData$bcr_patient_barcode, colAnnotation$patient)
-rownames(lihc_survData) <- rownames(colAnnotation)[idx]
+rownames(lihc_survData) <- lihc_survData$bcr_patient_barcode
+lihc_survData <- lihc_survData[colAnnotation$patient,]
+rownames(lihc_survData) <- rownames(colAnnotation)
 
 #-- Add back to SummarizedExperiment
 colData(tcgaLIHCdata) <- as(lihc_survData, "DataFrame")

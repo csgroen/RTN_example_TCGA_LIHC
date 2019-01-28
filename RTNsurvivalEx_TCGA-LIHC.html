@@ -317,15 +317,15 @@ lihc_survData &lt;- left_join(lihc_survData, lihc_molcData,
 <h2><span class="header-section-number">1.6</span> Join molecular and clinical features to SummarizedExperiment</h2>
 <p>Finally, we’ll join the features we derived from the two Cell publications to the data we got from GDC through TCGAbiolinks.</p>
 <pre class="r"><code>#-- Conform names
-idx &lt;- match(lihc_survData$bcr_patient_barcode, colAnnotation$patient)
-rownames(lihc_survData) &lt;- rownames(colAnnotation)[idx]
+rownames(lihc_survData) &lt;- lihc_survData$bcr_patient_barcode
+lihc_survData &lt;- lihc_survData[colAnnotation$patient,]
+rownames(lihc_survData) &lt;- rownames(colAnnotation)
 
 #-- Add back to SummarizedExperiment
 colData(tcgaLIHCdata) &lt;- as(lihc_survData, &quot;DataFrame&quot;)
 
-dir.create(&quot;results&quot;)</code></pre>
-<pre><code>## Warning in dir.create(&quot;results&quot;): 'results' already exists</code></pre>
-<pre class="r"><code>save(tcgaLIHCdata, file = &quot;results/tcgaLIHCdata_preprocessed.RData&quot;)</code></pre>
+dir.create(&quot;results&quot;)
+save(tcgaLIHCdata, file = &quot;results/tcgaLIHCdata_preprocessed.RData&quot;)</code></pre>
 </div>
 </div>
 <div id="session-information" class="section level1">

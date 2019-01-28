@@ -1,6 +1,6 @@
 RTNsurvival example - Hepatocellular carcinoma (TCGA-LIHC)
 ================
-Clarice Groeneveld, Gordon Robertson, Mauro Castro <br>
+Clarice Groeneveld, Gordon Robertson, Mauro Castro
 28 January 2019
 
 Summary
@@ -153,18 +153,14 @@ Finally, we'll join the features we derived from the two Cell publications to th
 
 ``` r
 #-- Conform names
-idx <- match(lihc_survData$bcr_patient_barcode, colAnnotation$patient)
-rownames(lihc_survData) <- rownames(colAnnotation)[idx]
+rownames(lihc_survData) <- lihc_survData$bcr_patient_barcode
+lihc_survData <- lihc_survData[colAnnotation$patient,]
+rownames(lihc_survData) <- rownames(colAnnotation)
 
 #-- Add back to SummarizedExperiment
 colData(tcgaLIHCdata) <- as(lihc_survData, "DataFrame")
 
 dir.create("results")
-```
-
-    ## Warning in dir.create("results"): 'results' already exists
-
-``` r
 save(tcgaLIHCdata, file = "results/tcgaLIHCdata_preprocessed.RData")
 ```
 
