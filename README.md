@@ -151,7 +151,6 @@ rownames(lihc_survData) <- rownames(colAnnotation)
 #-- Add back to SummarizedExperiment
 colData(tcgaLIHCdata) <- as(lihc_survData, "DataFrame")
 
-dir.create("results")
 save(tcgaLIHCdata, file = "tcgaLIHCdata_preprocessed.RData")
 ```
 
