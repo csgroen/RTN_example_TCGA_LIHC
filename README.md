@@ -1,6 +1,6 @@
 RTNsurvival example - Hepatocellular carcinoma (TCGA-LIHC)
 ================
-Clarice Groeneveld, Gordon Robertson, Mauro Castro
+Clarice Groeneveld, Gordon Robertson, Mauro Castro <br>
 28 January 2019
 
 Summary
