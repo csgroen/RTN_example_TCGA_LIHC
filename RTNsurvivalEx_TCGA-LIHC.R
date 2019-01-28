@@ -17,7 +17,7 @@ library(caret)
 library(knitr)
 
 #-- Check to make sure the data directory is in place
-if (!dir.exists("data") || !file.exists("data/transcriptionFactors.RData")) {
+if (!dir.exists("data")) {
     stop("-- NOTE: Please make sure to download the relevant `data` directory and place it into the working directory.")
 }
 
@@ -108,29 +108,3 @@ colData(tcgaLIHCdata) <- as(lihc_survData, "DataFrame")
 
 dir.create("results")
 save(tcgaLIHCdata, file = "results/tcgaLIHCdata_preprocessed.RData")
-
-#-------------------------------------------------------------------------------
-#-- Get list of regulatory elements
-load("data/transcriptionFactors.RData")
-tfSymbols <- tfs$SYMBOL
-
-#-- Add ENSEMBL information to regulatory element annotations
-tfEnsembls <- rowData(tcgaLIHCdata) %>%
-    as.data.frame() %>%
-    filter(SYMBOL %in% tfSymbols) %>%
-    pull(ENSEMBL)
-save(tfEnsembls, file = "results/tfEnsembls.RData")
-
-#-------------------------------------------------------------------------------
-#-- OPTIONAL - for parallel processing
-library(parallel)
-n <- detectCores() - 1
-options(cluster=makeCluster(n, "SOCK"))
-
-#-- RTN pipeline
-lihcTNI <- tni.constructor(tcgaLIHCdata, regulatoryElements = tfEnsembls)
-lihcTNI <- tni.permutation(lihcTNI, pValueCutoff = 10^-5, estimator = "spearman")
-lihcTNI <- tni.bootstrap(lihcTNI, nBootstraps = 200)
-lihcTNI <- tni.dpi.filter(lihcTNI)
-#-- OPTIONAL - for parallel processing
-stopCluster(getOption("cluster"))
