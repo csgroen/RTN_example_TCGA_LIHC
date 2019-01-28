@@ -5,21 +5,14 @@
 #-- Call/Install libraries
 # install with BiocManager:install("LIBRARYNAME")
 # Works for packages from CRAN or Bioconductor
-library(RTNsurvival)
 library(SummarizedExperiment)
 library(TCGAbiolinks)
 library(TxDb.Hsapiens.UCSC.hg38.knownGene)
 library(plyr)
 library(tidyverse)
-library(snow)
 library(readxl)
 library(caret)
 library(knitr)
-
-#-- Check to make sure the data directory is in place
-if (!dir.exists("data")) {
-    stop("-- NOTE: Please make sure to download the relevant `data` directory and place it into the working directory.")
-}
 
 #-------------------------------------------------------------------------------
 #-- Download the TCGA-LIHC data
@@ -47,12 +40,12 @@ colAnnotation <- colData(tcgaLIHCdata)
 #-------------------------------------------------------------------------------
 #-- Get more complete survival data (Liu et. al. 2018)
 download.file("https://ars.els-cdn.com/content/image/1-s2.0-S0092867418302290-mmc1.xlsx",
-              destfile = "data/Liu2018_survivalData.xlsx")
+              destfile = "Liu2018_survivalData.xlsx")
 
 #-- Read survival data
-nms <- names(read_excel("data/Liu2018_survivalData.xlsx", n_max = 0))
+nms <- names(read_excel("Liu2018_survivalData.xlsx", n_max = 0))
 col_types <- c("skip", ifelse(grepl("residual_tumor|cause_of_death", nms), "text", "guess"))
-liu_survData <- read_excel("data/Liu2018_survivalData.xlsx", sheet = 1, 
+liu_survData <- read_excel("Liu2018_survivalData.xlsx", sheet = 1, 
                            col_types = col_types, na = c("#N/A", "[Not Available]"))
 
 #-- Preprocess
@@ -81,9 +74,9 @@ lihc_survData <- cbind(lihc_survData, dummyStage)
 #-------------------------------------------------------------------------------
 #-- Read molecular covariates from the cohort paper
 download.file("https://ars.els-cdn.com/content/image/1-s2.0-S0092867417306396-mmc1.xlsx",
-              destfile = "data/TCGA_coreClinicalMolecular.xlsx")
+              destfile = "TCGA_coreClinicalMolecular.xlsx")
 
-lihc_molcData <- read_excel("data/TCGA_coreClinicalMolecular.xlsx", range = "A4:CT200")
+lihc_molcData <- read_excel("TCGA_coreClinicalMolecular.xlsx", range = "A4:CT200")
 
 lihc_molcData <- lihc_molcData %>%
     select(Barcode, mRNA = `mRNA clusters (5 group NMF, Hoadley group)`) %>%
@@ -107,5 +100,4 @@ rownames(lihc_survData) <- rownames(colAnnotation)
 #-- Add back to SummarizedExperiment
 colData(tcgaLIHCdata) <- as(lihc_survData, "DataFrame")
 
-dir.create("results")
-save(tcgaLIHCdata, file = "results/tcgaLIHCdata_preprocessed.RData")
+save(tcgaLIHCdata, file = "tcgaLIHCdata_preprocessed.RData")
